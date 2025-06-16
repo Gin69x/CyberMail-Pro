@@ -687,27 +687,27 @@ if (-not (Test-Installation)) {
 
 Write-Host @"
 
-╔══════════════════════════════════════════════╗
-║              Installation Complete            ║
-╠══════════════════════════════════════════════╣
-║  Usage Commands:                             ║
-║    • cybermail          (from anywhere)     ║
-║    • cybermail.bat      (direct launcher)   ║
-║    • python main.py     (direct python)     ║
-║                                              ║
-║  Installation Details:                       ║
+╔════════════════════════════════════════════════╗
+║              Installation Complete             ║
+╠════════════════════════════════════════════════╣
+║  Usage Commands:                               ║
+║    • cybermail          (from anywhere)        ║
+║    • cybermail.bat      (direct launcher)      ║
+║    • python main.py     (direct python)        ║
+║                                                ║
+║  Installation Details:                         ║
 ║    • Location: $InstallPath
-║    • Files: All project files downloaded     ║
-║    • Dependencies: All Python packages      ║
-║    • Configuration: Ready to use            ║
-║                                              ║
-║  Next Steps:                                 ║
-║    1. Restart terminal for 'cybermail' cmd  ║
+║    • Files: All project files downloaded       ║
+║    • Dependencies: All Python packages         ║
+║    • Configuration: Ready to use               ║
+║                                                ║
+║  Next Steps:                                   ║
+║    1. Restart terminal for 'cybermail' cmd     ║
 ║    2. Configure proxies in working_proxies.txt ║
-║    3. Run 'cybermail' to start               ║
-║                                              ║
-║  Support: See HELP.md for troubleshooting   ║
-╚══════════════════════════════════════════════╝
+║    3. Run 'cybermail' to start                 ║
+║                                                ║
+║  Support: See HELP.md for troubleshooting      ║
+╚════════════════════════════════════════════════╝
 "@ -ForegroundColor $Green
 
 # Show installation summary
