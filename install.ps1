@@ -3,7 +3,7 @@
 
 param(
     [string]$InstallPath = "$env:USERPROFILE\CyberMail-Pro",
-    [string]$GitHubRepo = "https://github.com/yourusername/cybermail-pro"
+    [string]$GitHubRepo = "https://github.com/Gin69x/CyberMail-Pro"
 )
 
 # Colors for terminal output
