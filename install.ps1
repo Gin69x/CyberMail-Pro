@@ -492,6 +492,8 @@ Repository: $GitHubRepo
         return $false
     }
 }
+
+function New-BatchFile {
     Write-Status "Creating batch launcher..." -Color $Cyan
     
     $batchContent = @"
