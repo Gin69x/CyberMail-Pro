@@ -1,113 +1,73 @@
 #!/usr/bin/env bash
 
-# ================================
-# CyberMail Pro Linux Installer
-# ================================
-
 set -e
 
-# Colors for terminal output
-GREEN="\033[0;32m"
-YELLOW="\033[1;33m"
-RED="\033[0;31m"
-CYAN="\033[0;36m"
-NC="\033[0m"
+# =====================================
+# CyberMail Pro Installer (Linux/Arch)
+# =====================================
 
-function echo_status() {
-    local color="$2"
-    echo -e "${color}[$(date +%H:%M:%S)] $1${NC}"
-}
-
-# =========================
-# Step 0: Determine install path
-# =========================
-if [ "$(id -u)" -eq 0 ]; then
-    INSTALL_PATH="/usr/local/bin/cybermail"
-    echo_status "Running as root: system-wide installation" $CYAN
-else
-    INSTALL_PATH="$HOME/bin/cybermail"
-    mkdir -p "$HOME/bin"
-    echo_status "Running as normal user: installing to $HOME/bin" $CYAN
-fi
-
-# =========================
-# Step 1: Check Python 3.10+
-# =========================
-if command -v python3 >/dev/null 2>&1; then
-    PYTHON_VER=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-    PYTHON_MAJOR=$(echo "$PYTHON_VER" | cut -d. -f1)
-    PYTHON_MINOR=$(echo "$PYTHON_VER" | cut -d. -f2)
-    if [ "$PYTHON_MAJOR" -lt 3 ] || { [ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]; }; then
-        echo_status "Python 3.10+ required, found $PYTHON_VER" $YELLOW
-        echo_status "Please install Python 3.10+ and re-run this installer." $RED
-        exit 1
-    else
-        echo_status "Python $PYTHON_VER detected ✅" $GREEN
-    fi
-else
-    echo_status "Python3 not found. Please install Python 3.10+ first." $RED
-    exit 1
-fi
-
-# =========================
-# Step 2: Check Git
-# =========================
-if ! command -v git >/dev/null 2>&1; then
-    echo_status "Git not found. Please install Git before continuing." $RED
-    exit 1
-else
-    echo_status "Git detected ✅" $GREEN
-fi
-
-# =========================
-# Step 3: Clone repository
-# =========================
-TMP_DIR=$(mktemp -d)
-REPO_URL="https://github.com/Gin69x/CyberMail-Pro.git"
-echo_status "Cloning repository into temporary directory..." $CYAN
-git clone "$REPO_URL" "$TMP_DIR"
-
-# Copy files to target installation folder
 TARGET_DIR="$HOME/.cybermail_pro"
-mkdir -p "$TARGET_DIR"
-cp -r "$TMP_DIR/"* "$TARGET_DIR/"
-rm -rf "$TMP_DIR"
-echo_status "Project files copied to $TARGET_DIR ✅" $GREEN
+LAUNCHER="$HOME/.local/bin/cybermail"
+REPO="https://github.com/Gin69x/CyberMail-Pro"
 
-# =========================
-# Step 4: Install Python dependencies
-# =========================
-echo_status "Installing Python dependencies..." $CYAN
-python3 -m pip install --upgrade pip --quiet
-python3 -m pip install -r "$TARGET_DIR/requirements.txt" --quiet
-echo_status "Dependencies installed ✅" $GREEN
+echo "[*] Starting CyberMail Pro installation..."
 
-# =========================
-# Step 5: Create helper files if missing
-# =========================
-# working_proxies.txt
-if [ ! -f "$TARGET_DIR/working_proxies.txt" ]; then
-    cat > "$TARGET_DIR/working_proxies.txt" <<EOL
-# CyberMail Pro Proxy List
-# Add one proxy per line (ip:port)
-# Example:
-# 127.0.0.1:8080
-EOL
-    echo_status "working_proxies.txt created ✅" $GREEN
+# Step 1: Check for Python
+if ! command -v python3 &>/dev/null; then
+    echo "[!] Python 3 not found. Please install python3."
+    exit 1
 fi
 
-# accounts.txt
-if [ ! -f "$TARGET_DIR/accounts.txt" ]; then
-    touch "$TARGET_DIR/accounts.txt"
-    echo_status "accounts.txt created ✅" $GREEN
+PY_VER=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+if [[ ${PY_VER%%.*} -lt 3 || ${PY_VER%%.*} -eq 3 && ${PY_VER#*.} -lt 10 ]]; then
+    echo "[!] Python 3.10+ required. Found $PY_VER"
+    exit 1
+fi
+echo "[✔] Python $PY_VER detected"
+
+# Step 2: Check for Git
+if ! command -v git &>/dev/null; then
+    echo "[!] Git not found. Please install git."
+    exit 1
+fi
+echo "[✔] Git detected"
+
+# Step 3: Clone repository
+if [[ -d "$TARGET_DIR" ]]; then
+    echo "[*] Existing installation found, removing..."
+    rm -rf "$TARGET_DIR"
 fi
 
-# logs directory
-mkdir -p "$TARGET_DIR/logs"
+echo "[*] Cloning CyberMail Pro into $TARGET_DIR..."
+git clone "$REPO.git" "$TARGET_DIR"
 
-# config directory
-mkdir -p "$TARGET_DIR/config"
-cat > "$TARGET_DIR/config/installation.json" <<EOL
+# Step 4: Create virtual environment
+echo "[*] Creating Python virtual environment..."
+python3 -m venv "$TARGET_DIR/venv"
+
+# Step 5: Activate venv and install dependencies
+echo "[*] Installing dependencies inside virtual environment..."
+source "$TARGET_DIR/venv/bin/activate"
+pip install --upgrade pip
+
+# Install requirements if file exists, fallback to essential packages
+if [[ -f "$TARGET_DIR/requirements.txt" ]]; then
+    pip install -r "$TARGET_DIR/requirements.txt"
+else
+    echo "[*] requirements.txt not found, installing essential packages..."
+    pip install requests rich colorama urllib3 certifi
+fi
+
+# Step 6: Ensure necessary directories/files exist
+[[ -f "$TARGET_DIR/working_proxies.txt" ]] || touch "$TARGET_DIR/working_proxies.txt"
+[[ -f "$TARGET_DIR/accounts.txt" ]] || touch "$TARGET_DIR/accounts.txt"
+[[ -d "$TARGET_DIR/config" ]] || mkdir "$TARGET_DIR/config"
+[[ -d "$TARGET_DIR/logs" ]] || mkdir "$TARGET_DIR/logs"
+
+# Create a default config JSON if missing
+CONFIG_FILE="$TARGET_DIR/config/installation.json"
+if [[ ! -f "$CONFIG_FILE" ]]; then
+cat > "$CONFIG_FILE" <<EOF
 {
     "installation_date": "$(date '+%Y-%m-%d %H:%M:%S')",
     "installation_path": "$TARGET_DIR",
@@ -115,46 +75,30 @@ cat > "$TARGET_DIR/config/installation.json" <<EOL
     "auto_update": true,
     "first_run": true
 }
-EOL
-echo_status "Configuration files created ✅" $GREEN
-
-# =========================
-# Step 6: Install as command
-# =========================
-# Copy this script itself as 'cybermail' for system-wide/user-wide execution
-if [ "$(id -u)" -eq 0 ]; then
-    BIN_PATH="/usr/local/bin/cybermail"
-else
-    BIN_PATH="$HOME/bin/cybermail"
-    # Ensure ~/bin is in PATH
-    if ! echo "$PATH" | grep -q "$HOME/bin"; then
-        echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-        if [ -n "$FISH_VERSION" ]; then
-            echo 'set -gx PATH $HOME/bin $PATH' >> ~/.config/fish/config.fish
-        fi
-        echo_status "Added ~/bin to PATH. Restart terminal or run 'source ~/.bashrc'" $YELLOW
-    fi
+EOF
 fi
 
-# Create launcher
-cat > "$BIN_PATH" <<EOL
+# Step 7: Create launcher in ~/.local/bin
+mkdir -p "$HOME/.local/bin"
+cat > "$LAUNCHER" <<EOF
 #!/usr/bin/env bash
-python3 "$TARGET_DIR/main.py" "\$@"
-EOL
+source "$TARGET_DIR/venv/bin/activate"
+python "$TARGET_DIR/main.py" "\$@"
+EOF
+chmod +x "$LAUNCHER"
 
-chmod +x "$BIN_PATH"
-echo_status "Installer registered as command: cybermail ✅" $GREEN
+echo "[✔] Launcher created at $LAUNCHER"
 
-# =========================
-# Step 7: Completion message
-# =========================
-echo -e "${CYAN}
-╔════════════════════════════════╗
-║  CyberMail Pro Installation ✅  ║
-╠════════════════════════════════╣
-║ Run anywhere: cybermail         ║
-║ Project location: $TARGET_DIR ║
-╚════════════════════════════════╝
-${NC}"
+# Step 8: Optional: Add ~/.local/bin to PATH for current session
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo "[*] Adding ~/.local/bin to PATH for current session..."
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 
-echo_status "You can now run 'cybermail' from any terminal." $GREEN
+# Step 9: Finish installation
+echo "[✔] Installation complete!"
+echo "[*] You can now run CyberMail Pro anywhere using:"
+echo "      cybermail"
+echo "[*] Make sure ~/.local/bin is in your PATH permanently for future sessions:"
+echo "      echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+
