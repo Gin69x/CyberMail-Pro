@@ -72,9 +72,17 @@ Python 3.10+ | 64-bit Architecture | 512MB RAM
 ```
 
 ### Installation
+
+**Windows**:
 ```powershell
 iex (irm https://raw.githubusercontent.com/Gin69x/CyberMail-Pro/refs/heads/main/install.ps1)
 ```
+
+**Linux**:
+```bash
+bash <(wget -qO- https://raw.githubusercontent.com/Gin69x/CyberMail-Pro/main/install.sh)
+```
+
 
 ### Configuration
 Put your proxies in working_proxies.txt for the program to work.
